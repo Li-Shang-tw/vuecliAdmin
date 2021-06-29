@@ -39,6 +39,7 @@
 
 <script>
 import pagination from '../components/pagination.vue';
+import modifyModal from "../components/modifyModal.vue"
 
  
 
