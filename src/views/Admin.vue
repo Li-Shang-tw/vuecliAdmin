@@ -1,10 +1,9 @@
 <template>
-<h1>admin</h1>
   <router-view />
 </template>
 <script>
 export default {
-    created(){
+    created(){      
      //檢查是否登入
      //取出token      
         const token = document.cookie.replace(/(?:(?:^|.*;\s*)hexToken\s*=\s*([^;]*).*$)|^.*$/, '$1');

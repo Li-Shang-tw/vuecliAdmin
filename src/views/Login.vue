@@ -58,7 +58,7 @@ export default {
             const { token, expired } = res.data;            
             document.cookie = `hexToken=${token};expires=${new Date(expired)}`;
            //轉址到後台葉面
-            this.$router.push('/admin/products')
+            this.$router.push('/products/1')
             
           }
           //帳號錯誤

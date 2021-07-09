@@ -13,10 +13,15 @@ const routes = [
     component:() =>
       import('../views/Admin.vue')
     ,
-    redirect:"/products",
+    redirect:"/products/1",
     children:[ {
-    path: "products",
+    path: "products/:page",
     name: "products",
+    props:(route)=>{
+      return{
+        page:route.params.page
+      }
+    },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -24,40 +29,26 @@ const routes = [
       import(/* webpackChunkName: "about" */ "../views/Products.vue"),
   },
   {
-    path: "orders",
+    path: "orders/:page",
     name: "Orders",
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
+    props:(route)=>{
+      return{
+        page:route.params.page
+      }
+    },
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/Orders.vue"),
-  },
-  {
-    path: "coupons",
-    name: "Coupons",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/Coupons.vue"),
-  },
-  {
-    path: "posts",
-    name: "Posts",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/Posts.vue"),
   }]
-  },
- 
-  
+  },  
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+  linkActiveClass :"active"
 });
 
 export default router;

@@ -1,7 +1,7 @@
 <template>
    <div
         id="productModal"
-        ref="productModal"
+        ref="modal"
         class="modal fade"
         tabindex="-1"
         aria-labelledby="productModalLabel"
@@ -11,7 +11,9 @@
           <div class="modal-content border-0">
             <div class="modal-header bg-dark text-white">
               <h5 id="productModalLabel" class="modal-title">
-                <span>新增產品 </span>
+                <span v-if="pattern=='create'">新增產品 </span>
+                <span v-else-if="pattern=='edit'">修改產品 </span>
+                 <span v-else-if="pattern=='detail'">產品細節 </span>
               </h5>
               <button
                 type="button"
@@ -25,30 +27,40 @@
                 <div class="col-sm-4">
                   <div class="mb-1">
                     <div class="form-group">
-                      <label for="imageUrl">輸入圖片網址</label>
-                      <input
-                        type="text"
+                      <label for="imageUrl" v-if="!(pattern=='detail')">輸入圖片網址</label>
+                      <input   
+                        v-if="!(pattern=='detail')"                              
+                        type="file"
                         class="form-control"
                         placeholder="請輸入圖片連結"
-                        v-model=" temporaryProuct.imageUrl"
+                        ref="fileInput"
+                        @change="uploadImg"
                       />
                     </div>
-                    <img
+                    <div>
+                      <p v-if="tempImageUrl">新圖片</p>
+                      <img v-if="!(pattern=='detail')"
+                      class="img-fluid"
+                      :src="tempImageUrl"
+                      alt=""
+                    />
+                   </div>
+                   <div>
+                     <p v-if="pattern=='edit'">原始圖檔</p>
+                     <img 
                       class="img-fluid"
                       :src="temporaryProuct.imageUrl"
                       alt=""
                     />
-                  </div>
+                   </div>
+                    
+                     
+                  </div>                 
                   <div>
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary btn-sm d-block w-100"
-                    >
-                      新增圖片
-                    </button>
-                  </div>
-                  <div>
-                    <button class="btn btn-outline-danger btn-sm d-block w-100">
+                    <button 
+                    v-if="!(pattern=='detail')"
+                    class="btn btn-outline-danger btn-sm d-block w-100"
+                    @click="deleteTemporayImg">
                       刪除圖片
                     </button>
                   </div>
@@ -56,7 +68,7 @@
                 <div class="col-sm-8">
                   <div class="form-group">
                     <label for="title">標題</label>
-                    <input
+                    <input                      
                       id="title"
                       type="text"
                       class="form-control"
@@ -97,7 +109,7 @@
                         min="0"
                         class="form-control"
                         placeholder="請輸入原價"
-                        v-model="temporaryProuct.origin_price"
+                        v-model.number="temporaryProuct.origin_price"
                       />
                     </div>
                     <div class="form-group col-md-6">
@@ -108,7 +120,7 @@
                         min="0"
                         class="form-control"
                         placeholder="請輸入售價"
-                        v-model="temporaryProuct.price"
+                        v-model.number="temporaryProuct.price"
                       />
                     </div>
                   </div>
@@ -162,10 +174,20 @@
               >
                 取消
               </button>
-              <button
+              
+              <button 
+              v-if="pattern =='create'"               
                 type="button"
                 class="btn btn-primary"
-                @click="getModifyProduct"
+                @click="postNewProduct"                
+              >
+                確認
+              </button>
+                <button 
+               v-else-if="pattern=='edit'"               
+                type="button"
+                class="btn btn-primary"
+                @click="editProduct(temporaryProuct.id)"                
               >
                 確認
               </button>
@@ -175,9 +197,112 @@
       </div>
 </template>
 <script>
+//引入bootstrap的modal
+import Modal from 'bootstrap/js/dist/modal';
 export default {
  name:"modifyModal",
+ data(){
+   return{
+     temporaryProuct:{
+
+     },
+     tempImageUrl:"",
+      modal: '',
+      pattern:""
+     
+      
+   }
+ },
+   mounted() {
+    this.modal = new Modal(this.$refs.modal)
   
+}, methods: {
+  //----modal-----
+    openModal() {
+      
+      //清除暫存圖片
+      if(this.pattern!=="detail"){
+       this.$refs.fileInput.value="";
+      }     
+   
+    this.tempImageUrl="";
+      if(this.pattern=="create"){
+   this.temporaryProuct ={};
+   }        
+   this.modal.show();
+    },
+    hideModal() {
+      //清除tempory資料
+      this.temporaryProuct={};
+      this.tempImageUrl="";
+      this.modal.hide();
+    },
+    //---新增 修改 刪除---
+    postNewProduct(){
+      this.temporaryProuct.imageUrl=this.tempImageUrl;
+       const  apiUrl =`${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/product`;
+      this.$http.post(apiUrl, { data: this.temporaryProuct }).then(res=>{
+        //錯誤通知
+      if(!res.data.success){      
+      //關閉modal
+     
+      alert(`${res.data.message}`);
+        }else{
+         //建立成功
+      alert("產品建立成功!!");       
+         }
+      this.hideModal(); 
+      
+      //通知product.vue更新畫面
+      this.$emit('proudctsChange')
+
+     })
+    },
+    editProduct(id){  
+      this.temporaryProuct.imageUrl=this.tempImageUrl;   
+      const  apiUrl =`${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/product/${id}`;
+      this.$http.put(apiUrl, { data: this.temporaryProuct }).then(res=>{
+         //錯誤通知
+      if(!res.data.success){    
+       alert(`${res.data.message}`);
+      }else{
+          //建立成功
+       alert("產品修改成功!!");       
+      }
+      this.hideModal(); 
+      //清除tempory資料
+       this.temporaryProuct={};
+       //通知product.vue更新畫面
+       this.$emit('proudctsChange')
+      })
+    },    
+    uploadImg(){
+      //取得input內的file
+    const file =this.$refs.fileInput.files[0];
+    //建立formData物件來裝file，符合上傳的格式
+    const formData =new FormData();
+    formData.append("file-to-upload",file);
+    //發送建立線上img url的請求
+     const  apiUrl =`${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/upload`;
+      this.$http.post(apiUrl,formData ).then(res=>{
+        //錯誤通知
+      if(!res.data.success){      
+      
+     
+      alert(`${res.data.message}`);
+        }else{
+         //建立成功
+        this.tempImageUrl =res.data.imageUrl
+         }   
+     })
+    },    
+    deleteTemporayImg(){
+      this.tempImageUrl="";
+       this.$refs.fileInput.value="";
+    }
+    
+  },
+ 
 }
 </script>
 
